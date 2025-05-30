@@ -128,7 +128,7 @@ $conn->close();
 
     <label for="regno">Registration No</label>
     <input type="text" id="regno" name="regno" required value="YS-HBA/" oninput="updateRegno()" />
-    <div id="error-message" style="color: red; display: none;">Invalid format. The total length must be 22 characters.</div>
+    <div id="error-message" style="color: red; display: none;">Invalid format. <br></div>
 
     <label for="class_days">Class Days</label>
     <select name="class_days" id="class_days" required>
