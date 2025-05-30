@@ -1,0 +1,85 @@
+
+  body { 
+    font-family: Arial, sans-serif; 
+    font-weight: bold;
+    background-image: linear-gradient(to left, rgb(54, 136, 212), rgb(238, 236, 137));
+    margin: 0; 
+    padding: 20px; 
+  }
+  form { 
+    max-width: 800px; 
+    margin: auto; 
+    background-color:#fcefb4; 
+    padding: 20px; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+  }
+  .tab { 
+    display: none; 
+  }
+  .step { 
+    /* Hello Dhruba */
+    height: 15px; 
+    width: 15px; 
+    margin: 0 2px; 
+    background-color: rgb(104, 97, 97); 
+    border-radius: 50%; 
+    display: inline-block; 
+  }
+  .step.active { 
+    /* Arin Singha */
+    background-color: #4CAF50; 
+  }
+  .step.finish { 
+    background-color: #219653; 
+  }
+  .button-row { 
+    margin-top: 20px; 
+    overflow: auto; 
+  }
+  .button-row button { 
+    padding: 10px 20px; 
+    margin: 5px; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer; 
+  }
+  .button-row .prev { 
+    background: #6c757d; 
+    color: white; 
+  }
+  .button-row .next { 
+    background: #28a745; 
+    color: white; 
+    float: right; 
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select {
+    width: 100%;
+    padding: 10px 15px;
+    margin: 6px 0 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: rgb(227, 247, 242);
+    font-size: 16px;
+    box-sizing: border-box;
+    appearance: none; /* Remove default arrow styling in selects */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    height: 45px; /* Set fixed height to match perfectly */
+  }
+
+  select {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='14'%20height='10'%20viewBox='0%200%2014%2010'%3E%3Cpath%20fill='%23666'%20d='M7%2010L0%200h14z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    padding-right: 35px; /* extra space for dropdown arrow */
+  }
+input.invalid, select.invalid, textarea.invalid {
+  border: 2px solid red;
+  background-color: #ffe6e6;
+}
