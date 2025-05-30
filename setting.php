@@ -1,160 +1,151 @@
 <?php
-session_start();
-if (!isset($_SESSION["admin_logged_in"])) {
-    header("Location: index.php");
-    exit();
-}
-
 include 'connection.php';
 
-// Initialize all fields with empty string
-$fields = [
-    'session' => '',
-    'course' => '',
-    'cita' => '',
-    'dita' => '',
-    'adita' => '',
-    'cdta' => '',
-    'ddta' => '',
-    'cfas' => '',
-    'dfas' => '',
-    'adfas' => '',
-    'cdtp' => '',
-    'ddtp' => ''
-];
+if (isset($_GET['download'])) {
+    // DOWNLOAD CSV
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment;filename=settings_export.csv');
 
-// Load existing data from database
-$result = $conn->query("SELECT * FROM settings");
-if ($result && $result->num_rows > 0) {
-    // Group all values by field name
-    $fieldValues = [];
-    foreach (array_keys($fields) as $field) {
-        $fieldValues[$field] = [];
-    }
-    
-    // Collect all values from each row
+    $output = fopen('php://output', 'w');
+
+    // Get column names
+    $result = $conn->query("SHOW COLUMNS FROM settings");
+    $columns = [];
     while ($row = $result->fetch_assoc()) {
-        foreach ($fields as $field => $value) {
-            if (isset($row[$field]) && $row[$field] !== '') {
-                $fieldValues[$field][] = $row[$field];
-            }
-        }
+        $columns[] = $row['Field'];
     }
-    
-    // Convert to comma-separated strings
-    foreach ($fields as $field => $value) {
-        $fields[$field] = implode(', ', $fieldValues[$field]);
-    }
-}
+    fputcsv($output, $columns);
 
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Process form submission here
-    // [Your existing form submission code]
-    
-    // After successful save, redirect to avoid resubmission
-    $_SESSION['success_message'] = "Settings saved successfully!";
-    header("Location: ".$_SERVER['PHP_SELF']);
+    // Get data
+    $data = $conn->query("SELECT * FROM settings");
+    while ($row = $data->fetch_assoc()) {
+        fputcsv($output, $row);
+    }
+
+    fclose($output);
     exit();
 }
 
-$conn->close();
+if (isset($_POST['upload'])) {
+    if ($_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['csv_file']['tmp_name'];
+
+        if (($handle = fopen($file, "r")) !== FALSE) {
+            $headers = fgetcsv($handle);
+            $colCount = count($headers);
+
+            $conn->query("DELETE FROM settings");
+
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                if (count($data) != $colCount) continue;
+
+                $escaped = array_map(function($val) use ($conn) {
+                    return $val === '' ? 'NULL' : "'" . $conn->real_escape_string($val) . "'";
+                }, $data);
+
+                $sql = "INSERT INTO settings (`" . implode('`,`', $headers) . "`) VALUES (" . implode(",", $escaped) . ")";
+                $conn->query($sql);
+            }
+
+            fclose($handle);
+            $message = "✅ Upload and replace successful.";
+        } else {
+            $message = "❌ Error reading the file.";
+        }
+    } else {
+        $message = "❌ File upload error.";
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Settings Management</title>
+    <title>Settings Table Manager</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            background: #f4f6f9;
+            margin: 40px;
         }
         .container {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            background: #fff;
+            padding: 30px;
+            margin: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         h2 {
             text-align: center;
-            color: #333;
             margin-bottom: 25px;
+            color: #333;
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        .help-text {
-            font-size: 13px;
-            color: #666;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        .btn-submit {
+        a.button {
+            display: inline-block;
+            text-decoration: none;
             background: #4CAF50;
             color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            margin-top: 15px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
         }
-        .success-message {
-            color: green;
-            padding: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
+        a.button:hover {
+            background: #45a049;
+        }
+        form {
+            margin-top: 25px;
+        }
+        input[type="file"] {
+            padding: 8px;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1e88e5;
+        }
+        .message {
+            margin: 20px 0;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background: #f2dede;
+            color: #a94442;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Settings Management</h2>
-        
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="success-message">
-                <?= $_SESSION['success_message'] ?>
-                <?php unset($_SESSION['success_message']); ?>
-            </div>
-        <?php endif; ?>
-        
-        <form method="post" action="">
-            <?php foreach ($fields as $field => $value): ?>
-                <div class="form-group">
-                    <label for="<?= $field ?>"><?= strtoupper($field) ?></label>
-                    <input type="text" 
-                           id="<?= $field ?>" 
-                           name="<?= $field ?>" 
-                           value="<?= htmlspecialchars($value) ?>"
-                           placeholder="Enter comma-separated values">
-                    <div class="help-text">
-                        Separate multiple values with commas (e.g., "Value 1, Value 2, Value 3")
-                    </div>
-                </div>
-            <?php endforeach; ?>
-            
-            <button type="submit" class="btn-submit">Save Settings</button>
-        </form>
-    </div>
+<div class="container">
+    <h2>Change Settings for New Sessions</h2>
+
+    <?php if (!empty($message)): ?>
+        <div class="message <?= strpos($message, '✅') !== false ? 'success' : 'error' ?>">
+            <?= $message ?>
+        </div>
+    <?php endif; ?>
+
+    <p>
+        <a href="?download=1" class="button">📥 Download Settings CSV</a>
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+        <label for="csv_file">Select CSV to upload and replace:</label><br>
+        <input type="file" name="csv_file" id="csv_file" accept=".csv" required><br>
+        <button type="submit" name="upload">📤 Upload and Replace</button>
+    </form>
+</div>
 </body>
 </html>

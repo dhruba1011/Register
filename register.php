@@ -127,9 +127,10 @@ $conn->close();
     </select>
 
     <label for="regno">Registration No</label>
-    <input type="text" id="regno" name="regno" required value="YS-HBA/" oninput="updateRegno()" />
-    <div id="error-message" style="color: red; display: none;">Invalid format. <br></div>
-
+    <input type="text" id="regno" name="regno" required value="YS-HBA/" 
+       oninput="updateRegno()" onblur="checkRegnoExists()" />
+      <div id="regno-error" style="color: red; font-size: 13px; display: none;"></div>
+      <div id="error-message" style="color: red; display: none;">Invalid format. <br></div>
     <label for="class_days">Class Days</label>
     <select name="class_days" id="class_days" required>
       <option value="">Select Days</option>
@@ -281,6 +282,33 @@ function updateRegno() {
   }
 }
 
+function checkRegnoExists() {
+  alert('Enterwd!!');
+  const regno = document.getElementById('regno').value.trim();
+  const errorDiv = document.getElementById('error-message');
+
+  if (regno.length < 10) return; // skip too-short input
+
+  fetch(`check_regno.php?regno=${encodeURIComponent(regno)}`)
+    .then(response => response.text())
+    .then(data => {
+      if (data === 'exists') {
+        errorDiv.textContent = "Registration number already exists.";
+        errorDiv.style.display = "block";
+        document.getElementById('regno').classList.add('invalid');
+      } else {
+        errorDiv.textContent = "";
+        errorDiv.style.display = "none";
+        document.getElementById('regno').classList.remove('invalid');
+      }
+    })
+    .catch(() => {
+      errorDiv.textContent = "Could not verify registration number.";
+      errorDiv.style.display = "block";
+    });
+}
+
+
 function validatePhoneNumbers() {
   const phone1 = document.getElementById('phone1');
   const phone2 = document.getElementById('phone2');
@@ -298,10 +326,11 @@ last_exam.addEventListener('change', () => {
   if (last_exam.value === 'MP') {
     hs_mark.style.display = 'none';
     hs_mark_label.style.display = 'none';
-    hs_mark.value = '';
+    hs_mark.required=false;
   } else {
     hs_mark.style.display = 'inline';
     hs_mark_label.style.display = 'inline';
+    hs_mark.required = true;
   }
 });
 
@@ -332,20 +361,12 @@ function showTab(n) {
 function nextPrev(n) {
   let tabs = document.getElementsByClassName("tab");
 
-  // Validate before going next
+  // Exit if form is invalid
   if (n === 1 && !validateForm()) return false;
 
-  // Special phone validation on step 2 (index 1)
-  if (currentTab === 1 && n === 1) {
-    if (!validatePhoneNumbers()) return false;
-  }
-
-  // Hide current tab
   tabs[currentTab].style.display = "none";
-
   currentTab += n;
 
-  // If submit on last step
   if (currentTab >= tabs.length) {
     document.getElementById("regForm").submit();
     return false;
@@ -354,37 +375,26 @@ function nextPrev(n) {
   showTab(currentTab);
 }
 
+
 function validateForm() {
   let valid = true;
-  let tabs = document.getElementsByClassName("tab");
-  let inputs = tabs[currentTab].querySelectorAll("input, select");
+  let currentTabFields = document.getElementsByClassName("tab")[currentTab].querySelectorAll("input, select");
 
-  inputs.forEach((input) => {
-    if (input.hasAttribute("required")) {
-      if (!input.value || input.value.trim() === "") {
-        input.classList.add("invalid");
-        valid = false;
-      } else {
-        // Specific validation for registration number format on step 0
-        if (input.id === "regno") {
-          const regVal = input.value.trim();
-          const prefix = "YS-HBA/";
-          if (!regVal.startsWith(prefix) || regVal.length !== 22) {
-            input.classList.add("invalid");
-            valid = false;
-          } else {
-            input.classList.remove("invalid");
-          }
-        } else {
-          input.classList.remove("invalid");
-        }
-      }
+  currentTabFields.forEach(field => {
+    if (field.required && !field.value.trim()) {
+      field.classList.add("invalid");
+      valid = false;
+    } else {
+      field.classList.remove("invalid");
     }
   });
 
+  if (!validatePhoneNumbers()) {
+    valid = false;
+  }
+
   return valid;
 }
-
 function fixStepIndicator(n) {
   let steps = document.getElementsByClassName("step");
   for (let i = 0; i < steps.length; i++) {
@@ -392,7 +402,14 @@ function fixStepIndicator(n) {
   }
   steps[n].className += " active";
 }
-</script>
 
+document.addEventListener("DOMContentLoaded", function () {
+    const hsInput = document.getElementById("hs_marks");
+    if (hsInput && (hsInput.value === "" || hsInput.value === null)) {
+        hsInput.value = 0;
+    }
+});
+
+</script>
 </body>
 </html>

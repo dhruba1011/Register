@@ -3,7 +3,6 @@ session_start();
 
 // Check if session contains registration details
 if (!isset($_SESSION['reg_details']) || !is_array($_SESSION['reg_details'])) {
-    // Optionally log this or handle the error gracefully
     http_response_code(400);
     echo "No registration data found.";
     exit;
@@ -11,17 +10,17 @@ if (!isset($_SESSION['reg_details']) || !is_array($_SESSION['reg_details'])) {
 
 $d = $_SESSION['reg_details'];
 
-// You can optionally clear the session here if needed:
-// unset($_SESSION['reg_details']); // Uncomment if you want to clear after download
+// Optional: unset session if you want one-time download
+// unset($_SESSION['reg_details']);
 
-// Build the text content
-$file_content = "Registration Successful!\n\n";
+// Build tab-delimited text content
+$file_content = "Field\tValue\n"; // header row
 foreach ($d as $key => $value) {
     $label = ucfirst(str_replace('_', ' ', $key));
-    $file_content .= "$label: $value\n";
+    $file_content .= "$label\t$value\n";
 }
 
-// Clean the output buffer in case anything was printed before
+// Clean the output buffer
 if (ob_get_length()) {
     ob_clean();
 }
@@ -36,5 +35,4 @@ header('Expires: 0');
 
 // Output the file content
 echo $file_content;
-
 exit;
