@@ -86,6 +86,8 @@ $conn->close();
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Student Registration Form</title>
 <link rel="stylesheet" href="style_regis.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
   /* Highlight invalid fields */
   input.invalid, select.invalid {
@@ -161,7 +163,16 @@ $conn->close();
     <input type="text" name="fname" required oninput="this.value = this.value.toUpperCase()" />
 
     <label for="dob">Date of Birth</label>
-    <input type="date" name="dob" id="dob" required />
+<input type="text" name="dob" id="dob" placeholder="DD/MM/YYYY" required>
+
+<script>
+  flatpickr("#dob", {
+    dateFormat: "d/m/Y",  // Sets display format to dd/mm/yyyy
+    allowInput: true,     // Allows manual typing
+    maxDate: "today",    // Prevents future dates
+  });
+</script>
+
 
     <label for="gender">Gender</label>
     <select name="gender" id="gender" required>
@@ -283,7 +294,7 @@ function updateRegno() {
 }
 
 function checkRegnoExists() {
-  alert('Enterwd!!');
+  // 'alert('Enterwd!!');
   const regno = document.getElementById('regno').value.trim();
   const errorDiv = document.getElementById('error-message');
 
